@@ -1,45 +1,38 @@
-use itertools::Itertools;
-use std::cmp::Reverse;
-
 pub fn get_batches(input: &str) -> Vec<Vec<u32>> {
-    let (mut acc, left) = input.split("\n")
+    let (mut acc, left) = input
+        .split('\n')
         .map(|l| match l.parse::<u32>() {
             Ok(u) => Some(u),
             Err(_) => None,
         })
-        .fold((Vec::<Vec::<u32>>::new(), Vec::<u32>::new()), |mut acc, x| {
-            match x {
+        .fold(
+            (Vec::<Vec<u32>>::new(), Vec::<u32>::new()),
+            |mut acc, x| match x {
                 Some(u) => {
                     acc.1.push(u);
                     acc
-                },
+                }
                 None => {
                     acc.0.push(acc.1);
                     (acc.0, Vec::new())
                 }
-            }
-        });
+            },
+        );
     acc.push(left);
     acc
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
     let batches = get_batches(input);
-    batches
-        .iter()
-        .map(|bp| 
-            bp.iter().sum()
-        )
-        .max()
+    batches.iter().map(|bp| bp.iter().sum()).max()
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
     let batches = get_batches(input);
     let mut batch_sums = batches
         .iter()
-        .map(|bp|
-            bp.iter().sum()
-        ).collect::<Vec<u32>>();
+        .map(|bp| bp.iter().sum())
+        .collect::<Vec<u32>>();
     batch_sums.sort();
     batch_sums.reverse();
 
@@ -48,7 +41,7 @@ pub fn part_two(input: &str) -> Option<u32> {
 
 fn main() {
     let input = advent_of_code::read_file("inputs", 1);
-        
+
     advent_of_code::solve!(1, part_one, &input);
     advent_of_code::solve!(2, part_two, &input);
 }
