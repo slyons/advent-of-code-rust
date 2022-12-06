@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::cmp::Reverse;
 
 pub fn get_batches(input: &str) -> Vec<Vec<u32>> {
     let (mut acc, left) = input.split("\n")
@@ -33,7 +34,16 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let batches = get_batches(input);
+    let mut batch_sums = batches
+        .iter()
+        .map(|bp|
+            bp.iter().sum()
+        ).collect::<Vec<u32>>();
+    batch_sums.sort();
+    batch_sums.reverse();
+
+    Some(batch_sums.iter().take(3).sum())
 }
 
 fn main() {
