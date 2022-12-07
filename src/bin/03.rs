@@ -21,24 +21,43 @@ fn get_compartments(input: Vec<(&str, &str)>) -> Vec<(HashSet<char>, HashSet<cha
         .collect()
 }
 
+fn get_priority(c: &char) -> u32 {
+    if c.is_ascii_uppercase() {
+        (*c as u32 - 64) + 26
+    } else {
+        *c as u32 - 96
+    }
+}
+
 pub fn part_one(input: &str) -> Option<u32> {
     let rucksacks = get_compartments(get_rucksacks(input));
     let rscores = rucksacks
         .iter()
         .map(|(left, right)| {
             let intersection = left.intersection(right).at_most_one().unwrap().unwrap();
-            if intersection.is_ascii_uppercase() {
-                (*intersection as u32 - 64) + 26
-            } else {
-                *intersection as u32 - 96
-            }
+            get_priority(intersection)
         })
         .collect_vec();
     Some(rscores.iter().sum())
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<u32> {
+    let rucksacks = input.split('\n');
+    let groups = &rucksacks
+        .filter(|l| !l.is_empty())
+        .map(|l| HashSet::from_iter(l.chars()))
+        .chunks(3);
+    let mut group_results = Vec::new();
+    for chunk in groups {
+        let intersection = chunk
+            .reduce(|accum: HashSet<char>, item| {
+                HashSet::from_iter(accum.intersection(&item).cloned())
+            })
+            .map(|hs| *(hs.iter().next().unwrap()))
+            .unwrap();
+        group_results.push(get_priority(&intersection));
+    }
+    Some(group_results.iter().sum())
 }
 
 fn main() {
@@ -68,6 +87,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 3);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(70));
     }
 }
