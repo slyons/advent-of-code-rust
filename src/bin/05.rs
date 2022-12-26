@@ -39,7 +39,6 @@ pub fn split_instructions(input: &str) -> (Vec<Vec<char>>, Vec<MoveInst>) {
 
     for sline in stack_lines {
         for (i, idx) in indexes.iter().enumerate() {
-            println!("IDX is {}", idx);
             if let Some(c) = sline.chars().nth(*idx) {
                 if !c.is_whitespace() {
                     stacks[i].insert(0, c);
@@ -66,8 +65,22 @@ pub fn part_one(input: &str) -> Option<String> {
     Some(top_chars.join(""))
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<String> {
+    let (mut stacks, instructions) = split_instructions(input);
+    let mut crane = Vec::new();
+    for inst in instructions {
+        for _step in 0..inst.count {
+            crane.push(stacks[inst.from - 1].pop().unwrap());
+        }
+        crane.reverse();
+        stacks[inst.to - 1].extend(crane.iter());
+        crane.clear();
+    }
+    let mut top_chars = Vec::new();
+    for stack in stacks {
+        top_chars.push(stack.last().unwrap().to_string());
+    }
+    Some(top_chars.join(""))
 }
 
 fn main() {
