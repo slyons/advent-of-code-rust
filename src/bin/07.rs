@@ -176,8 +176,18 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(subsizes)
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<usize> {
+    let root = parse_commands(input);
+    let du = root.size;
+    let total_size = 70000000_usize;
+    let available_space = total_size - du;
+    let mut delete_candidates: Vec<usize> = root
+        .filter_subdirs(&|d| available_space + d.size > 30000000, true)
+        .iter()
+        .map(|d| d.borrow().size)
+        .collect();
+    delete_candidates.sort();
+    delete_candidates.first().copied()
 }
 
 fn main() {
@@ -199,6 +209,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 7);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(24933642));
     }
 }
