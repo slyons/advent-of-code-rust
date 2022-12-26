@@ -1,13 +1,13 @@
-pub fn find_sopm(input: &str) -> usize {
+pub fn find_sopm(buffer_size: usize, input: &str) -> usize {
     let mut idx: usize = 0;
-    let mut cbuf: [char; 4] = ['!'; 4];
+    let mut cbuf = vec!['!'; buffer_size];
     'outer: for c in input.trim().chars() {
-        cbuf.copy_within(1..=3, 0);
-        cbuf[3] = c;
+        cbuf.copy_within(1..=(buffer_size - 1), 0);
+        cbuf[(buffer_size - 1)] = c;
         idx += 1;
-        if idx >= 4 {
-            for i in 0..4 {
-                for j in 0..4 {
+        if idx >= buffer_size {
+            for i in 0..buffer_size {
+                for j in 0..buffer_size {
                     if i != j && cbuf[i] == cbuf[j] {
                         continue 'outer;
                     }
@@ -20,11 +20,11 @@ pub fn find_sopm(input: &str) -> usize {
 }
 
 pub fn part_one(input: &str) -> Option<usize> {
-    Some(find_sopm(input))
+    Some(find_sopm(4, input))
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<usize> {
+    Some(find_sopm(14, input))
 }
 
 fn main() {
