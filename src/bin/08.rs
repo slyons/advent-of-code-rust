@@ -1,6 +1,7 @@
 #![allow(unused_comparisons)]
 
 use rayon::prelude::*;
+use std::collections::BinaryHeap;
 
 pub fn parse_grid(input: &str) -> Vec<Vec<u32>> {
     let mut base = Vec::new();
@@ -14,15 +15,15 @@ pub fn parse_grid(input: &str) -> Vec<Vec<u32>> {
     base
 }
 
-#[derive(Debug)]
-enum Direction {
+#[derive(Debug, Clone, Copy)]
+pub enum Direction {
     North,
     South,
     East,
     West,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct DirIterator<'a> {
     direction: Direction,
     grid: &'a Vec<Vec<u32>>,
@@ -78,6 +79,28 @@ pub fn tree_is_visible(x: usize, y: usize, grid: &Vec<Vec<u32>>) -> bool {
     false
 }
 
+pub fn score_for_dir(x: usize, y: usize, grid: &Vec<Vec<u32>>, dir: Direction) -> usize {
+    let tree_height = grid[y][x];
+    let iter = DirIterator::new(dir, x, y, grid);
+    let mut trees = 0_usize;
+    for t in iter {
+        trees += 1;
+        if t >= tree_height {
+            break;
+        }
+    }
+    trees
+}
+
+pub fn scenic_score(x: usize, y: usize, grid: &Vec<Vec<u32>>) -> usize {
+    use Direction::*;
+
+    vec![North, West, East, South]
+        .par_iter()
+        .map(|dir| score_for_dir(x, y, grid, *dir))
+        .reduce(|| 1, |l, r| l * r)
+}
+
 pub fn get_visible_trees(grid: &Vec<Vec<u32>>) -> Vec<(usize, usize)> {
     let height = grid.len();
     let width = grid[0].len();
@@ -97,14 +120,34 @@ pub fn get_visible_trees(grid: &Vec<Vec<u32>>) -> Vec<(usize, usize)> {
         .collect()
 }
 
+pub fn calc_scenic_scores(grid: &Vec<Vec<u32>>) -> BinaryHeap<usize> {
+    let height = grid.len();
+    let width = grid[0].len();
+    let coords: Vec<(usize, usize, &Vec<Vec<u32>>)> = (0..height)
+        .flat_map(move |row| (0..width).map(move |col| (row, col, grid)))
+        .collect();
+
+    let mut heap = BinaryHeap::new();
+    let scores: Vec<usize> = coords
+        .par_iter()
+        .map(|(y, x, grid)| scenic_score(*x, *y, grid))
+        .collect();
+    for s in scores {
+        heap.push(s);
+    }
+    heap
+}
+
 pub fn part_one(input: &str) -> Option<usize> {
     let grid = parse_grid(input);
     let visible_trees = get_visible_trees(&grid);
     Some(visible_trees.len())
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<usize> {
+    let grid = parse_grid(input);
+    let mut scenic_scores = calc_scenic_scores(&grid);
+    scenic_scores.pop()
 }
 
 fn main() {
@@ -115,6 +158,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use itertools::Itertools;
+
     use super::*;
 
     #[test]
@@ -126,6 +171,22 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 8);
-        assert_eq!(part_two(&input), None);
+        assert_eq!(part_two(&input), Some(8));
+    }
+
+    #[test]
+    fn test_scenic_score() {
+        let input = advent_of_code::read_file("examples", 8);
+        let grid = parse_grid(&input);
+        assert_eq!(score_for_dir(2, 3, &grid, Direction::North), 2);
+    }
+
+    #[test]
+    fn test_dir_iterator() {
+        let input = advent_of_code::read_file("examples", 8);
+        let grid = parse_grid(&input);
+        let iter = DirIterator::new(Direction::North, 2, 3, &grid);
+        let v = iter.collect_vec();
+        assert_eq!(v, vec![3, 5, 3]);
     }
 }
