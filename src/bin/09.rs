@@ -41,6 +41,7 @@ impl Rope {
 
     pub fn move_one(&mut self, m: &Movement) {
         for _step in 0..m.steps {
+            //println!("{}: {:?}", m, self.positions);
             let mut head = self.positions.first().unwrap().clone();
             match m.dir {
                 'U' => head.y += 1,
@@ -78,7 +79,10 @@ impl Rope {
 pub fn run_input(rope_length: usize, input: &str) -> Rope {
     let mut ht = Rope::from_vec(vec![Position::default(); rope_length]);
     for l in input.lines() {
-        let m: Movement = l.parse().unwrap();
+        if l.trim().is_empty() {
+            continue;
+        }
+        let m: Movement = l.trim().parse().unwrap();
         ht.move_one(&m);
     }
     ht
@@ -89,8 +93,9 @@ pub fn part_one(input: &str) -> Option<usize> {
     Some(ht.seen.len())
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<usize> {
+    let ht = run_input(10, input);
+    Some(ht.seen.len())
 }
 
 fn main() {
@@ -113,8 +118,16 @@ mod tests {
 
     #[test]
     fn test_part_two() {
-        let input = advent_of_code::read_file("examples", 9);
-        assert_eq!(part_two(&input), None);
+        let input = r#"R 5
+        U 8
+        L 8
+        D 3
+        R 17
+        D 10
+        L 25
+        U 20
+        "#;
+        assert_eq!(part_two(input), Some(36));
     }
 
     #[test]
