@@ -32,10 +32,7 @@ impl CPU {
 
     fn on_finish(&mut self) {
         match self.instructions[self.IC] {
-            Instruction::AddX(x) => {
-                println!("CYCLE: {}, X: {} -> {}", self.cycle, self.X, self.X + x);
-                self.X += x
-            }
+            Instruction::AddX(x) => self.X += x,
             Instruction::NoOp => (),
         }
     }
@@ -89,7 +86,6 @@ pub fn sample_cycles(input: &str, mut cycles: Vec<usize>) -> Vec<i64> {
     let mut sample_cycle = cycles.pop().unwrap();
     while let true = cpu.step() {
         if cpu.cycle == sample_cycle - 1 {
-            println!("CYCLE: {}, X: {}", cpu.cycle, cpu.X);
             output.push(sample_cycle as i64 * cpu.X);
             if let Some(next_cycle) = cycles.pop() {
                 sample_cycle = next_cycle;
@@ -107,8 +103,35 @@ pub fn part_one(input: &str) -> Option<i64> {
     Some(cycles.iter().sum())
 }
 
-pub fn part_two(_input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<String> {
+    let insts = parse_instructions(input);
+    let mut cpu = CPU::new(insts);
+    let mut output = "".to_string();
+    loop {
+        if cpu.cycle % 40 == 0 && cpu.cycle != 0 {
+            output += "\n";
+        }
+        let pixel_active = cpu
+            .X
+            .try_into()
+            .map(|x: usize| {
+                let cycle = cpu.cycle % 40;
+                x == cycle
+                    || x + 1 == cycle
+                    || x.checked_sub(1).map(|xi| xi == cycle).unwrap_or(false)
+            })
+            .unwrap_or(false);
+
+        if !cpu.step() {
+            break;
+        }
+        if pixel_active {
+            output += "#";
+        } else {
+            output += "."
+        }
+    }
+    Some(output.trim().to_string())
 }
 
 fn main() {
@@ -130,7 +153,14 @@ mod tests {
     #[test]
     fn test_part_two() {
         let input = advent_of_code::read_file("examples", 10);
-        assert_eq!(part_two(&input), None);
+        let output = r#"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######....."#
+            .to_string();
+        assert_eq!(part_two(&input), Some(output));
     }
 
     #[test]
